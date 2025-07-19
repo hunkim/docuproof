@@ -10,7 +10,7 @@ async function analyzeSectionWithSolar(
   fullDocumentText: string,
   sectionIndex: number,
   totalSections: number,
-  changeLevel: 'minor' | 'major' = 'minor'
+  changeLevel: 'minor' | 'medium' | 'major' = 'medium'
 ): Promise<any> {
   try {
     const response = await fetch('https://api.upstage.ai/v1/chat/completions', {
@@ -33,16 +33,25 @@ ${changeLevel === 'minor' ? `
 MINOR LEVEL REQUIREMENTS:
 - PROOFREADING: Fix grammar errors, spelling mistakes, punctuation issues
 - MISSING INFORMATION: Identify gaps, unclear references, incomplete sentences
-- WORDING & STYLE: Improve word choices, terminology consistency, flow
-- Focus on: correctness, clarity, and consistency without major restructuring
-- Goal: Clean, polished text that maintains the original structure and voice
+- WORDING & STYLE: Improve word choices, terminology consistency, basic flow
+- Scope: Minimal corrections, maintain original structure and voice
+- Goal: Clean, error-free text with basic polish
+` : changeLevel === 'medium' ? `
+MEDIUM LEVEL REQUIREMENTS:
+- COMPREHENSIVE EDITING: Fix all errors PLUS improve clarity and engagement
+- STYLE ENHANCEMENT: Enhance tone, flow, readability, and professional quality
+- CONTENT IMPROVEMENT: Strengthen arguments, add transitions, improve organization
+- REWRITING: Moderate restructuring of sentences and paragraphs for better impact
+- Goal: Significantly improved text that's more engaging and effective
 ` : `
 MAJOR LEVEL REQUIREMENTS:
-- SIGNIFICANT REWRITING: Restructure text for better organization and flow
-- BETTER STORYTELLING: Enhance narrative structure, engagement, and impact  
-- RESTRUCTURE: Reorganize content for maximum effectiveness and readability
-- Focus on: comprehensive improvement of structure, style, and storytelling quality
-- Goal: Transform text to produce the best possible writing quality and impact
+- AGGRESSIVE REWRITING: Completely reimagine and restructure the content
+- STORYTELLING MASTERY: Transform into compelling, engaging, powerful narrative
+- COMPREHENSIVE TRANSFORMATION: Reorganize, enhance, and elevate every aspect
+- PROFESSIONAL EXCELLENCE: Make this text as impactful and effective as possible
+- LENGTH FLEXIBILITY: Expand or condense as needed for maximum impact
+- BOLD IMPROVEMENTS: Don't hold back - this should be dramatically better
+- Goal: World-class writing that significantly outperforms the original
 `}
 
 ANALYSIS CATEGORIES:
@@ -50,19 +59,27 @@ ANALYSIS CATEGORIES:
 2. **Missing Information**: Find incomplete sentences, unclear references, missing context, gaps
 3. **Proofreading**: Find grammar errors, spelling mistakes, punctuation issues, better word choices
 
-TEXT DELETION POLICY:
-- ONLY remove text if it is: clearly duplicated, obviously redundant, or factually incorrect
-- DO NOT remove text for style, brevity, or personal preference
-- DO NOT delete content just because it could be "improved" - edit it instead
-- Keep all meaningful information, data, and substantive content
-- When in doubt, EDIT rather than DELETE
+TEXT MODIFICATION POLICY:
+${changeLevel === 'minor' ? `
+- CONSERVATIVE: Only remove text if clearly duplicated or factually incorrect
+- PRESERVE: Keep all meaningful information and maintain similar length
+- MINIMAL: Make the fewest changes necessary for correctness
+` : changeLevel === 'medium' ? `
+- MODERATE: Remove redundant text and improve structure as needed
+- FLEXIBLE: Adjust length moderately to improve clarity and flow  
+- BALANCED: Meaningful improvements while respecting original content
+` : `
+- AGGRESSIVE: Remove, restructure, and rewrite extensively for maximum impact
+- TRANSFORMATIVE: Significantly expand or condense as needed for effectiveness
+- BOLD: Prioritize quality over preservation - make dramatic improvements
+`}
 
 CRITICAL INSTRUCTIONS:
 - You MUST respond with ONLY valid JSON - no markdown, no explanations, no other text
 - Do not use markdown headers like ### or ** 
 - Do not include any text before or after the JSON
-- Apply the analysis level consistently - ${changeLevel === 'minor' ? 'focus on correctness and clarity' : 'be comprehensive and transformative'}
-- PRESERVE content length - aim for similar word count unless removing clear duplications
+- Apply the analysis level consistently - ${changeLevel === 'minor' ? 'be conservative and minimal' : changeLevel === 'medium' ? 'be balanced but impactful' : 'be aggressive and transformative'}
+- For MAJOR level: This should be dramatically better writing - don't hold back!
 
 JSON SCHEMA (respond with this exact structure):
 {
@@ -237,7 +254,7 @@ export async function POST(request: NextRequest) {
       return new Response("Invalid token", { status: 401 })
     }
 
-    const { documentId, changeLevel = 'minor' } = await request.json()
+    const { documentId, changeLevel = 'medium' } = await request.json()
 
     const db = getFirestore()
     

@@ -13,19 +13,61 @@ import { db } from "@/lib/firebase"
 
 import { diffWords } from 'diff'
 
+// Convert HTML to minimal text rendering
+function htmlToMinimalText(text: string): string {
+  if (!text) return text
+  
+  return text
+    // Convert common HTML elements to plain text
+    .replace(/<br\s*\/?>/gi, '\n')
+    .replace(/<\/p>/gi, '\n')
+    .replace(/<p[^>]*>/gi, '')
+    .replace(/<\/div>/gi, '\n')
+    .replace(/<div[^>]*>/gi, '')
+    .replace(/<\/h[1-6]>/gi, '\n')
+    .replace(/<h[1-6][^>]*>/gi, '')
+    // Remove other HTML tags
+    .replace(/<[^>]*>/g, '')
+    // Convert HTML entities
+    .replace(/&nbsp;/g, ' ')
+    .replace(/&amp;/g, '&')
+    .replace(/&lt;/g, '<')
+    .replace(/&gt;/g, '>')
+    .replace(/&quot;/g, '"')
+    .replace(/&#39;/g, "'")
+    // Clean up extra whitespace but preserve intentional line breaks
+    .replace(/[ \t]+/g, ' ')
+    .replace(/\n\s*\n/g, '\n\n')
+    .trim()
+}
+
+// Render text with preserved line breaks
+function renderMinimalText(text: string, className?: string) {
+  const cleanText = htmlToMinimalText(text)
+  return (
+    <span className={className} style={{ whiteSpace: 'pre-wrap' }}>
+      {cleanText}
+    </span>
+  )
+}
+
 // Create minimal word-level diff using professional diff library
 function createInlineTrackChanges(original: string, suggested: string) {
   if (!original || !suggested) {
-    return <span className="text-gray-800">{suggested || original}</span>
+    return renderMinimalText(suggested || original, "text-gray-800")
   }
 
-  // If they're identical, just show the text (though this shouldn't happen with our filtering)
-  if (original.trim() === suggested.trim()) {
-    return <span className="text-gray-800">{original}</span>
+  // Clean HTML to minimal text for both versions
+  const cleanOriginal = htmlToMinimalText(original)
+  const cleanSuggested = htmlToMinimalText(suggested)
+
+  // If they're identical after cleaning, just show the text
+  if (cleanOriginal.trim() === cleanSuggested.trim()) {
+    return renderMinimalText(cleanOriginal, "text-gray-800")
   }
 
   // Use the professional diff library for optimal word-level diffing
-  const changes = diffWords(original, suggested)
+  const changes = diffWords(cleanOriginal, cleanSuggested)
   const result = []
   let keyCounter = 0
 
@@ -34,20 +76,20 @@ function createInlineTrackChanges(original: string, suggested: string) {
 
     if (change.added) {
       result.push(
-        <span key={key} className="text-green-600 bg-green-50 px-1 rounded font-medium">
+        <span key={key} className="text-green-600 bg-green-50 px-1 rounded font-medium" style={{ whiteSpace: 'pre-wrap' }}>
           {change.value}
         </span>
       )
     } else if (change.removed) {
       result.push(
-        <span key={key} className="text-red-600 line-through bg-red-50 px-1 rounded">
+        <span key={key} className="text-red-600 line-through bg-red-50 px-1 rounded" style={{ whiteSpace: 'pre-wrap' }}>
           {change.value}
         </span>
       )
     } else {
       // Unchanged text
       result.push(
-        <span key={key} className="text-gray-800">
+        <span key={key} className="text-gray-800" style={{ whiteSpace: 'pre-wrap' }}>
           {change.value}
         </span>
       )
@@ -93,10 +135,10 @@ function SectionComparison({
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
             <div className="text-base font-medium text-green-600">✅ Clean Version</div>
-            <span className="text-xs text-gray-500">Ready to copy</span>
+            <span className="text-xs text-gray-500">Minimal text rendering</span>
           </div>
           <button 
-            onClick={() => navigator.clipboard.writeText(cleanVersion)}
+            onClick={() => navigator.clipboard.writeText(htmlToMinimalText(cleanVersion))}
             className="text-xs bg-green-100 text-green-700 px-3 py-1 rounded-full hover:bg-green-200 transition-colors"
           >
             📋 Copy Text
@@ -104,7 +146,7 @@ function SectionComparison({
         </div>
         <div className="p-4 bg-white border border-green-200 rounded-lg shadow-sm">
           <div className="text-sm text-gray-800 leading-relaxed select-all">
-            {cleanVersion}
+            {renderMinimalText(cleanVersion)}
           </div>
         </div>
       </div>
@@ -201,9 +243,9 @@ export function DocumentAnalysis({ document }: DocumentAnalysisProps) {
   const [results, setResults] = useState<AnalysisResult | null>(document.analysisResults || null)
   const [currentSection, setCurrentSection] = useState<string>("")
   const [processedSections, setProcessedSections] = useState<Array<any>>([])
-  const [changeLevel, setChangeLevel] = useState<'minor' | 'major'>('minor')
-  const [previousLevel, setPreviousLevel] = useState<'minor' | 'major' | null>(
-    document.analysisResults ? 'minor' : null // Default to minor if existing results
+  const [changeLevel, setChangeLevel] = useState<'minor' | 'medium' | 'major'>('medium')
+  const [previousLevel, setPreviousLevel] = useState<'minor' | 'medium' | 'major' | null>(
+    document.analysisResults ? 'medium' : null // Default to medium if existing results
   )
   const { toast } = useToast()
   const { user } = useAuth()
@@ -400,11 +442,12 @@ export function DocumentAnalysis({ document }: DocumentAnalysisProps) {
                 <Badge 
                   variant="secondary" 
                   className={`ml-2 ${
-                    (previousLevel || 'minor') === 'minor' ? 'bg-green-100 text-green-700' :
+                    (previousLevel || 'medium') === 'minor' ? 'bg-green-100 text-green-700' :
+                    (previousLevel || 'medium') === 'medium' ? 'bg-blue-100 text-blue-700' :
                     'bg-purple-100 text-purple-700'
                   }`}
                 >
-                  {previousLevel || 'minor'} level
+                  {previousLevel || 'medium'} level
                 </Badge>
               )}
             </div>
@@ -435,7 +478,7 @@ export function DocumentAnalysis({ document }: DocumentAnalysisProps) {
               <div className="text-center p-3 bg-blue-50 rounded-lg">
                 <div className="text-xl font-bold text-blue-600">
                   {results.sections
-                    .filter(s => s.original?.trim() !== s.cleanVersion?.trim())
+                    .filter(s => htmlToMinimalText(s.original || '').trim() !== htmlToMinimalText(s.cleanVersion || '').trim())
                     .flatMap(s => s.consistencyIssues || []).length}
                 </div>
                 <div className="text-sm text-blue-600 flex items-center justify-center gap-1">
@@ -446,7 +489,7 @@ export function DocumentAnalysis({ document }: DocumentAnalysisProps) {
               <div className="text-center p-3 bg-orange-50 rounded-lg">
                 <div className="text-xl font-bold text-orange-600">
                   {results.sections
-                    .filter(s => s.original?.trim() !== s.cleanVersion?.trim())
+                    .filter(s => htmlToMinimalText(s.original || '').trim() !== htmlToMinimalText(s.cleanVersion || '').trim())
                     .flatMap(s => s.missingInformation || []).length}
                 </div>
                 <div className="text-sm text-orange-600 flex items-center justify-center gap-1">
@@ -457,7 +500,7 @@ export function DocumentAnalysis({ document }: DocumentAnalysisProps) {
               <div className="text-center p-3 bg-red-50 rounded-lg">
                 <div className="text-xl font-bold text-red-600">
                   {results.sections
-                    .filter(s => s.original?.trim() !== s.cleanVersion?.trim())
+                    .filter(s => htmlToMinimalText(s.original || '').trim() !== htmlToMinimalText(s.cleanVersion || '').trim())
                     .flatMap(s => s.proofreadingFixes || []).length}
                 </div>
                 <div className="text-sm text-red-600 flex items-center justify-center gap-1">
@@ -470,7 +513,7 @@ export function DocumentAnalysis({ document }: DocumentAnalysisProps) {
                   {results.sections.filter(s => 
                     !s.suggestions || 
                     s.suggestions.length === 0 || 
-                    s.original?.trim() === s.cleanVersion?.trim()
+                    htmlToMinimalText(s.original || '').trim() === htmlToMinimalText(s.cleanVersion || '').trim()
                   ).length}
                 </div>
                 <div className="text-sm text-green-600 flex items-center justify-center gap-1">
@@ -628,8 +671,21 @@ export function DocumentAnalysis({ document }: DocumentAnalysisProps) {
                       } ${analyzing ? 'opacity-50 cursor-not-allowed' : ''}`}
                     >
                       <div className="font-medium">Minor</div>
-                      <div className="text-xs opacity-75 mt-1">Proofreading & missing info</div>
-                      <div className="text-xs opacity-60 mt-0.5">Wording, style, consistency</div>
+                      <div className="text-xs opacity-75 mt-1">Basic proofreading</div>
+                      <div className="text-xs opacity-60 mt-0.5">Errors, gaps, wording</div>
+                    </button>
+                    <button
+                      onClick={() => setChangeLevel('medium')}
+                      disabled={analyzing}
+                      className={`px-4 py-2 text-sm rounded-lg border transition-all ${
+                        changeLevel === 'medium'
+                          ? 'bg-blue-100 border-blue-500 text-blue-700 shadow-sm'
+                          : 'bg-gray-50 border-gray-300 text-gray-600 hover:bg-gray-100 hover:border-gray-400'
+                      } ${analyzing ? 'opacity-50 cursor-not-allowed' : ''}`}
+                    >
+                      <div className="font-medium">Medium</div>
+                      <div className="text-xs opacity-75 mt-1">Comprehensive editing</div>
+                      <div className="text-xs opacity-60 mt-0.5">Style, flow, engagement</div>
                     </button>
                     <button
                       onClick={() => setChangeLevel('major')}
@@ -641,8 +697,8 @@ export function DocumentAnalysis({ document }: DocumentAnalysisProps) {
                       } ${analyzing ? 'opacity-50 cursor-not-allowed' : ''}`}
                     >
                       <div className="font-medium">Major</div>
-                      <div className="text-xs opacity-75 mt-1">Significant rewriting</div>
-                      <div className="text-xs opacity-60 mt-0.5">Better storytelling & structure</div>
+                      <div className="text-xs opacity-75 mt-1">Aggressive rewriting</div>
+                      <div className="text-xs opacity-60 mt-0.5">Complete transformation</div>
                     </button>
                   </div>
                 </div>
@@ -685,7 +741,7 @@ export function DocumentAnalysis({ document }: DocumentAnalysisProps) {
               if (!section.suggestions || section.suggestions.length === 0) return false
               
               // Must have actual text changes (not just identical text)
-              const hasActualChanges = section.original?.trim() !== section.cleanVersion?.trim()
+              const hasActualChanges = htmlToMinimalText(section.original || '').trim() !== htmlToMinimalText(section.cleanVersion || '').trim()
               if (!hasActualChanges) {
                 console.log(`⏭️ Skipping section "${section.title}" - no actual changes despite ${section.suggestions.length} reported suggestions`)
                 return false
@@ -724,15 +780,16 @@ export function DocumentAnalysis({ document }: DocumentAnalysisProps) {
           {results.sections
             .filter(section => {
               if (!section.suggestions || section.suggestions.length === 0) return false
-              return section.original?.trim() !== section.cleanVersion?.trim()
+              return htmlToMinimalText(section.original || '').trim() !== htmlToMinimalText(section.cleanVersion || '').trim()
             }).length === 0 && (
             <div className="text-center py-12">
               <CheckCircle className="h-16 w-16 text-green-500 mx-auto mb-4" />
               <h3 className="text-xl font-semibold text-green-600 mb-2">Document looks great!</h3>
               <p className="text-gray-600">
-                No actual changes needed at the <span className="font-medium">{previousLevel || 'minor'}</span> analysis level. 
-                {(previousLevel || 'minor') === 'minor' && ' Proofreading and style review found no issues.'}
-                {(previousLevel || 'minor') === 'major' && ' Comprehensive rewriting analysis found no improvements needed.'}
+                No actual changes needed at the <span className="font-medium">{previousLevel || 'medium'}</span> analysis level. 
+                {(previousLevel || 'medium') === 'minor' && ' Basic proofreading found no issues.'}
+                {(previousLevel || 'medium') === 'medium' && ' Comprehensive editing found no improvements needed.'}
+                {(previousLevel || 'medium') === 'major' && ' Aggressive rewriting analysis found the text is already excellent.'}
               </p>
             </div>
           )}
