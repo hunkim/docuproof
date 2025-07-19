@@ -10,7 +10,7 @@ async function analyzeSectionWithSolar(
   fullDocumentText: string,
   sectionIndex: number,
   totalSections: number,
-  changeLevel: 'minimal' | 'moderate' | 'major' = 'moderate'
+  changeLevel: 'minor' | 'major' = 'minor'
 ): Promise<any> {
   try {
     const response = await fetch('https://api.upstage.ai/v1/chat/completions', {
@@ -29,25 +29,20 @@ async function analyzeSectionWithSolar(
 
 ANALYSIS LEVEL: ${changeLevel.toUpperCase()}
 
-${changeLevel === 'minimal' ? `
-MINIMAL LEVEL REQUIREMENTS:
-- Fix ONLY critical errors that affect comprehension or professionalism
-- Focus on: grammar errors, spelling mistakes, obvious factual inconsistencies
-- Do NOT change: word choices, sentence structure, or style unless absolutely necessary
-- Make the fewest possible changes while ensuring correctness
-` : changeLevel === 'moderate' ? `
-MODERATE LEVEL REQUIREMENTS:
-- Fix errors AND improve clarity and flow
-- Focus on: grammar, spelling, better word choices, clearer sentence structure, consistency
-- Acceptable changes: modest rephrasing for clarity, terminology consistency, flow improvements
-- Balance: meaningful improvements without changing the author's voice significantly
+${changeLevel === 'minor' ? `
+MINOR LEVEL REQUIREMENTS:
+- PROOFREADING: Fix grammar errors, spelling mistakes, punctuation issues
+- MISSING INFORMATION: Identify gaps, unclear references, incomplete sentences
+- WORDING & STYLE: Improve word choices, terminology consistency, flow
+- Focus on: correctness, clarity, and consistency without major restructuring
+- Goal: Clean, polished text that maintains the original structure and voice
 ` : `
 MAJOR LEVEL REQUIREMENTS:
-- Comprehensive improvement and potential rewriting
-- Fix all issues AND enhance overall quality, style, and effectiveness
-- Focus on: all errors plus style improvements, better organization, enhanced clarity, professional tone
-- Acceptable changes: significant rephrasing, restructuring, enhanced vocabulary, improved flow
-- Goal: Transform text to be as clear, professional, and effective as possible
+- SIGNIFICANT REWRITING: Restructure text for better organization and flow
+- BETTER STORYTELLING: Enhance narrative structure, engagement, and impact  
+- RESTRUCTURE: Reorganize content for maximum effectiveness and readability
+- Focus on: comprehensive improvement of structure, style, and storytelling quality
+- Goal: Transform text to produce the best possible writing quality and impact
 `}
 
 ANALYSIS CATEGORIES:
@@ -66,7 +61,7 @@ CRITICAL INSTRUCTIONS:
 - You MUST respond with ONLY valid JSON - no markdown, no explanations, no other text
 - Do not use markdown headers like ### or ** 
 - Do not include any text before or after the JSON
-- Apply the analysis level consistently - ${changeLevel === 'minimal' ? 'be conservative' : changeLevel === 'moderate' ? 'be balanced' : 'be comprehensive'}
+- Apply the analysis level consistently - ${changeLevel === 'minor' ? 'focus on correctness and clarity' : 'be comprehensive and transformative'}
 - PRESERVE content length - aim for similar word count unless removing clear duplications
 
 JSON SCHEMA (respond with this exact structure):
@@ -242,7 +237,7 @@ export async function POST(request: NextRequest) {
       return new Response("Invalid token", { status: 401 })
     }
 
-    const { documentId, changeLevel = 'moderate' } = await request.json()
+    const { documentId, changeLevel = 'minor' } = await request.json()
 
     const db = getFirestore()
     

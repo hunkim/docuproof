@@ -201,9 +201,9 @@ export function DocumentAnalysis({ document }: DocumentAnalysisProps) {
   const [results, setResults] = useState<AnalysisResult | null>(document.analysisResults || null)
   const [currentSection, setCurrentSection] = useState<string>("")
   const [processedSections, setProcessedSections] = useState<Array<any>>([])
-  const [changeLevel, setChangeLevel] = useState<'minimal' | 'moderate' | 'major'>('moderate')
-  const [previousLevel, setPreviousLevel] = useState<'minimal' | 'moderate' | 'major' | null>(
-    document.analysisResults ? 'moderate' : null // Default to moderate if existing results
+  const [changeLevel, setChangeLevel] = useState<'minor' | 'major'>('minor')
+  const [previousLevel, setPreviousLevel] = useState<'minor' | 'major' | null>(
+    document.analysisResults ? 'minor' : null // Default to minor if existing results
   )
   const { toast } = useToast()
   const { user } = useAuth()
@@ -400,12 +400,11 @@ export function DocumentAnalysis({ document }: DocumentAnalysisProps) {
                 <Badge 
                   variant="secondary" 
                   className={`ml-2 ${
-                    (previousLevel || 'moderate') === 'minimal' ? 'bg-green-100 text-green-700' :
-                    (previousLevel || 'moderate') === 'moderate' ? 'bg-blue-100 text-blue-700' :
+                    (previousLevel || 'minor') === 'minor' ? 'bg-green-100 text-green-700' :
                     'bg-purple-100 text-purple-700'
                   }`}
                 >
-                  {previousLevel || 'moderate'} level
+                  {previousLevel || 'minor'} level
                 </Badge>
               )}
             </div>
@@ -620,30 +619,17 @@ export function DocumentAnalysis({ document }: DocumentAnalysisProps) {
                   </div>
                   <div className="flex gap-2 justify-center">
                     <button
-                      onClick={() => setChangeLevel('minimal')}
+                      onClick={() => setChangeLevel('minor')}
                       disabled={analyzing}
                       className={`px-4 py-2 text-sm rounded-lg border transition-all ${
-                        changeLevel === 'minimal'
+                        changeLevel === 'minor'
                           ? 'bg-green-100 border-green-500 text-green-700 shadow-sm'
                           : 'bg-gray-50 border-gray-300 text-gray-600 hover:bg-gray-100 hover:border-gray-400'
                       } ${analyzing ? 'opacity-50 cursor-not-allowed' : ''}`}
                     >
-                      <div className="font-medium">Minimal</div>
-                      <div className="text-xs opacity-75 mt-1">Fix only critical errors</div>
-                      <div className="text-xs opacity-60 mt-0.5">Grammar, spelling, typos</div>
-                    </button>
-                    <button
-                      onClick={() => setChangeLevel('moderate')}
-                      disabled={analyzing}
-                      className={`px-4 py-2 text-sm rounded-lg border transition-all ${
-                        changeLevel === 'moderate'
-                          ? 'bg-blue-100 border-blue-500 text-blue-700 shadow-sm'
-                          : 'bg-gray-50 border-gray-300 text-gray-600 hover:bg-gray-100 hover:border-gray-400'
-                      } ${analyzing ? 'opacity-50 cursor-not-allowed' : ''}`}
-                    >
-                      <div className="font-medium">Moderate</div>
-                      <div className="text-xs opacity-75 mt-1">Improve clarity & flow</div>
-                      <div className="text-xs opacity-60 mt-0.5">+ Better phrasing, consistency</div>
+                      <div className="font-medium">Minor</div>
+                      <div className="text-xs opacity-75 mt-1">Proofreading & missing info</div>
+                      <div className="text-xs opacity-60 mt-0.5">Wording, style, consistency</div>
                     </button>
                     <button
                       onClick={() => setChangeLevel('major')}
@@ -655,8 +641,8 @@ export function DocumentAnalysis({ document }: DocumentAnalysisProps) {
                       } ${analyzing ? 'opacity-50 cursor-not-allowed' : ''}`}
                     >
                       <div className="font-medium">Major</div>
-                      <div className="text-xs opacity-75 mt-1">Comprehensive rewrite</div>
-                      <div className="text-xs opacity-60 mt-0.5">+ Style, structure, enhancement</div>
+                      <div className="text-xs opacity-75 mt-1">Significant rewriting</div>
+                      <div className="text-xs opacity-60 mt-0.5">Better storytelling & structure</div>
                     </button>
                   </div>
                 </div>
@@ -744,10 +730,9 @@ export function DocumentAnalysis({ document }: DocumentAnalysisProps) {
               <CheckCircle className="h-16 w-16 text-green-500 mx-auto mb-4" />
               <h3 className="text-xl font-semibold text-green-600 mb-2">Document looks great!</h3>
               <p className="text-gray-600">
-                No actual changes needed at the <span className="font-medium">{previousLevel || 'moderate'}</span> analysis level. 
-                {(previousLevel || 'moderate') === 'minimal' && ' Only critical errors were checked.'}
-                {(previousLevel || 'moderate') === 'moderate' && ' Both errors and clarity improvements were checked.'}
-                {(previousLevel || 'moderate') === 'major' && ' Comprehensive analysis found no improvements needed.'}
+                No actual changes needed at the <span className="font-medium">{previousLevel || 'minor'}</span> analysis level. 
+                {(previousLevel || 'minor') === 'minor' && ' Proofreading and style review found no issues.'}
+                {(previousLevel || 'minor') === 'major' && ' Comprehensive rewriting analysis found no improvements needed.'}
               </p>
             </div>
           )}
