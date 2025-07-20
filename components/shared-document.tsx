@@ -150,7 +150,7 @@ function SectionComparison({
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
             {suggestions.map((suggestion, i) => (
-              <div key={i} className="flex items-start gap-2 text-xs">
+              <div key={`suggestion-${i}-${suggestion.type || 'misc'}`} className="flex items-start gap-2 text-xs">
                 <span className="flex-shrink-0 w-4 h-4 bg-blue-200 text-blue-700 rounded-full flex items-center justify-center font-medium">
                   {i + 1}
                 </span>
@@ -227,7 +227,7 @@ export function SharedDocument({ document }: SharedDocumentProps) {
                          htmlToMinimalText(section.original || '').trim() !== htmlToMinimalText(section.cleanVersion || '').trim()
                 })
                 .map((section: any, index: number) => (
-                  <Card key={index}>
+                  <Card key={`section-${index}-${section.title || 'untitled'}`}>
                     <CardHeader>
                       <CardTitle className="text-lg flex items-center gap-2">
                         <span>{section.title}</span>
@@ -251,7 +251,7 @@ export function SharedDocument({ document }: SharedDocumentProps) {
 
           <TabsContent value="clean" className="space-y-4">
             {results.sections.map((section: any, index: number) => (
-              <Card key={index}>
+              <Card key={`clean-${index}-${section.title || 'untitled'}`}>
                 <CardHeader>
                   <CardTitle className="text-lg flex items-center gap-2">
                     <CheckCircle className="h-5 w-5 text-green-600" />
@@ -301,7 +301,7 @@ export function SharedDocument({ document }: SharedDocumentProps) {
                     </h4>
                     <ul className="list-disc list-inside space-y-1 text-sm">
                       {results.consistencyIssues.map((issue: string, index: number) => (
-                        <li key={index}>{issue}</li>
+                        <li key={`consistency-${index}`}>{issue}</li>
                       ))}
                     </ul>
                   </div>

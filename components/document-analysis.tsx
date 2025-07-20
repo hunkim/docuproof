@@ -159,7 +159,7 @@ function SectionComparison({
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
             {suggestions.map((suggestion, i) => (
-              <div key={i} className="flex items-start gap-2 text-xs">
+              <div key={`suggestion-${i}-${suggestion.type || 'misc'}`} className="flex items-start gap-2 text-xs">
                 <span className="flex-shrink-0 w-4 h-4 bg-blue-200 text-blue-700 rounded-full flex items-center justify-center font-medium">
                   {i + 1}
                 </span>
@@ -609,7 +609,7 @@ export function DocumentAnalysis({ document }: DocumentAnalysisProps) {
                     <div className="h-32 overflow-y-auto">
                       <div className="space-y-1">
                         {processedSections.map((section, index) => (
-                          <div key={index} className="flex items-center justify-between text-sm p-2 bg-muted rounded">
+                          <div key={`processed-${index}-${section.title || 'untitled'}`} className="flex items-center justify-between text-sm p-2 bg-muted rounded">
                             <span className="font-medium">{section.title}</span>
                             <div className="flex gap-1">
                               <Badge variant="secondary" className="text-xs">
@@ -750,7 +750,7 @@ export function DocumentAnalysis({ document }: DocumentAnalysisProps) {
               return true
             })
             .map((section, index, filteredSections) => (
-                <div key={section.title || index} className="space-y-6">
+                <div key={`section-${index}-${section.title || 'untitled'}`} className="space-y-6">
                   {/* Section Header */}
                   <div className="border-b pb-2">
                     <h3 className="text-xl font-semibold">{section.title}</h3>
