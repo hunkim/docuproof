@@ -114,17 +114,21 @@ JSON SCHEMA (respond with this exact structure):
             },
           {
             role: "user",
-            content: `FULL DOCUMENT CONTEXT (${totalSections} sections total):
----
-${fullDocumentText}
----
+            content: `Please check consistency of this chunk/chapter:
 
-SECTION TO ANALYZE (Section ${sectionIndex + 1}: "${sectionTitle}"):
----
+<chapter_to_work_on>
 ${sectionContent}
----
+</chapter_to_work_on>
 
-Please analyze this section for consistency with the full document, missing information, and proofreading needs. Make only minimal, necessary changes that improve clarity without altering meaning.`
+Based on the entire context:
+
+<entire_context>
+${fullDocumentText}
+</entire_context>
+
+Analyze this section for consistency with the context, missing information, and proofreading needs according to the ${changeLevel} level requirements.
+
+Output should be JSON only including the modified/suggested version of the chapter to work on.`
           }
         ],
         reasoning_effort: "high",
